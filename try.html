@@ -140,7 +140,7 @@
 
   const width = 800
   const height = 500
-  const padding = { top: 40, bottom: 40, left: 40, right: 40 }
+  const padding = { top: 40, bottom: 40, left: 100, right: 40 }
 
   // 节点信息转化为map
   nodeInfo.forEach(item => {
@@ -256,9 +256,9 @@
     let dom = d3.select(item)._groups[0][0]
     let id = Number(dom.id)
     let date = nodeMap.get(id).date
-    const x = xScale(new Date(date));
-    const y = dom.transform.animVal[0].matrix.f
-    d3.select(item).attr("transform", `translate(${y},${x})`)
+    const y = xScale(new Date(date));
+    const x = dom.transform.animVal[0].matrix.f
+    d3.select(item).attr("transform", `translate(${x},${y})`)
     nodeDomMap.set(Number(item.id), item)
   })
 
@@ -308,9 +308,9 @@
       let dom = d3.select(item)._groups[0][0]
       let id = Number(dom.id)
       let date = nodeMap.get(id).date
-      const x = t(new Date(date));
-      const y = dom.transform.animVal[0].matrix.e
-      d3.select(item).attr("transform", `translate(${y},${x})`)
+      const y = t(new Date(date));
+      const x = dom.transform.animVal[0].matrix.e
+      d3.select(item).attr("transform", `translate(${x},${y})`)
       nodeDomMap.set(Number(item.id), item)
     })
 
@@ -332,8 +332,8 @@
 
     //重新绘制x网格
     svg.selectAll(".grid-line")
-      .attr("x1", d => { return t(new Date(d)) })
-      .attr("x2", d => { return t(new Date(d)) })
+      .attr("y1", d => { return t(new Date(d)) })
+      .attr("y2", d => { return t(new Date(d)) })
   }
 
 
