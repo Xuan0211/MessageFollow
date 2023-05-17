@@ -1,22 +1,14 @@
 ﻿<template>
   <div class='page'>
-    <div class='top'>
-      <div class='control'>
-        <h1>控制面板</h1>
-        <el-table :data="Mlist" style="width: 100%" highlight-current-row @current-change="handleCurrentChange">
-          <el-table-column prop="0" label="id" width="40"></el-table-column>
-          <el-table-column :prop="(index).toString()" :label="index" v-for="index of k" :key="index" />
-        </el-table>
-      </div>
-      <div class='view1'>
-        <h1>视图1</h1>
-        <el-slider v-model="selectvalue" range show-stops :max="maxx" :min="minn" />
-        <svg id="chart" width="800" height="800"></svg>
-      </div>
-      <div class='view2'>
-        <h1>视图2</h1>
-        <svg id="rightchart" width="100" height="300"></svg>
-      </div>
+    <div class='control'>
+      <el-table :data="Mlist" style="width: 100%" highlight-current-row @current-change="handleCurrentChange" ref="table">
+        <el-table-column prop="0" label="id" width="40"></el-table-column>
+        <el-table-column :prop="(index).toString()" :label="(index).toString()" v-for="index of k" :key="index" />
+      </el-table>
+    </div>
+    <div class='view1'>
+      <el-slider v-model="selectvalue" range show-stops :max="maxx" :min="minn" />
+      <svg id="chart" width="800" height="800"></svg>
     </div>
   </div>
 </template>
@@ -36,7 +28,10 @@ export default {
       k: 4,
       Mlist: [],
       currentRow: undefined,
-      marColor: "black"
+      marColor: "black",
+      selectColor: "green",
+      oldCurrentRow: undefined,
+      messageColor: "#DCDCDC"
     };
   },
   methods: {
@@ -107,31 +102,61 @@ export default {
             time: d.time + 1
           }]))
           .attr('id', `E${d.id}`)
+          .attr('class', `M${d.markov}`)
           .attr('fill', 'none')
-          .attr('stroke-width', 3)
+          .attr('stroke-width', 5)
           // .attr("marker-end", "url(#arrow)")
-          .style("stroke", "#DCDCDC")
-          .style("stroke-dasharray", 6);
+          .style("stroke", that.messageColor)
+          .style("stroke-dasharray", 6)
+          .on("click", function () {
+            if (d.markov != undefined) {
+              // 恢复上次选择的颜色
+              if (that.oldCurrentRow != undefined) {
+                d3.selectAll(`.M${that.oldCurrentRow}`)
+                  .style("stroke", that.marColor);
+              }
+              // 弹窗当前选择
+              that.$message.success("选择了" + d.markov);
+              // 记录当前选择 以便下次选择时恢复颜色
+              that.oldCurrentRow = d.markov;
+              // 高亮当前选择
+              d3.selectAll(`.M${d.markov}`)
+                .style("stroke", that.selectColor)
+                .style("stroke-dasharray", 0);
+              // 在表格中高亮当前选择
+              that.$refs.table.setCurrentRow(that.$refs.table.data.find(function (e) {
+                return e[0] == d.markov;
+              }))
+            }
 
+          })
+          .append('title')
+          .text(dd => {
+            return `source: ${d.source}\ntarget: ${d.target}\ntime: ${d.time}`;
+          });;
+
+        // 绘制点
         dotgroup.append("circle")
           .attr("class", `T${d.time}`)
           .attr("cy", yScale(d.source) + 0.5 * yScale.bandwidth())
           .attr("cx", xScale(d.time))
-          .attr("r", 5)
+          .attr("r", 8)
           .style("fill", "black");
 
         dotgroup.append("circle")
           .attr("class", `T${d.time + 1}`)
           .attr("cy", yScale(d.target) + 0.5 * yScale.bandwidth())
           .attr("cx", xScale(d.time + 1))
-          .attr("r", 5)
+          .attr("r", 8)
           .style("fill", "black");
       });
 
+      // 高亮所有马尔科夫列
       Mdata.markov.forEach(mar => {
         mar.flow.forEach(flow => {
           d3.select(`#E${flow}`)
-            .style("stroke", that.marColor);
+            .style("stroke", that.marColor)            
+            .style("stroke-dasharray", 0);
         })
       });
 
@@ -139,6 +164,8 @@ export default {
     handleCurrentChange(currentRow, oldCurrentRow) {
       let that = this;
       console.log(currentRow, oldCurrentRow);
+
+      // 恢复上次选择的颜色
       if (oldCurrentRow != null) {
         Mdata.markov.find(function (e) {
           return e.id === oldCurrentRow[0]
@@ -148,13 +175,17 @@ export default {
         });
       }
 
+      // 高亮当前选择的马尔科夫列
       Mdata.markov.find(function (e) {
         return e.id === currentRow[0]
       }).flow.forEach(d => {
         d3.select(`#E${d}`)
-          .style("stroke", "green");
+          .style("stroke", "green")
+          .style("stroke-dasharray", 0);
       });
-    }
+
+      console.log(that.oldCurrentRow);
+    },
   },
   mounted() {
     this.generateVis2();
@@ -210,21 +241,11 @@ export default {
   width: 100%;
   height: 100%;
   display: flex;
-  flex-direction: column;
-}
-
-.top {
-  height: 75%;
-  display: flex;
   flex-direction: row;
 }
 
-.buttom {
-  height: 25%;
-}
-
 .control {
-  width: 28%;
+  width: 30%;
   display: flex;
   flex-direction: column;
   gap: 5%;
@@ -233,41 +254,5 @@ export default {
 
 .view1 {
   width: 50%;
-}
-
-.vew2 {
-  width: 30%;
-}
-
-.dropdown {
-  border: 0.1em solid black;
-  padding: 10px 10px;
-}
-
-.dropdowntext {
-  width: auto;
-}
-
-.example-showcase .el-dropdown-link {
-  cursor: pointer;
-  color: var(--el-color-primary);
-  display: flex;
-  align-items: center;
-}
-
-.varcol {
-  display: flex;
-  flex-direction: row;
-  align-content: center;
-}
-
-.input {
-  width: auto;
-}
-
-.controllist {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 </style>
