@@ -46,11 +46,11 @@ export default {
       const innerwidth = width - margin.left - margin.right;
       const innerheight = height - margin.top - margin.bottom;
       // 设置坐标轴
-      const xScale = d3.scaleBand()
+      const yScale = d3.scaleBand()
         .domain(Vdata.list.map(d => d.name))
         .range([0, innerwidth]);
-      const yScale = d3.scaleLinear()
-        .domain([1, 10])
+      const xScale = d3.scaleLinear()
+        .domain([1, 50])
         .range([0, innerheight]);
       const g = svg.append('g')
         .attr('id', 'maingroup')
@@ -62,67 +62,8 @@ export default {
       g.append('g')
         .call(xAxis);
       
-      // 定义边
-      let line = d3.line()
-        .x(function (d) {
-          return xScale(d.name) + 0.5 * xScale.bandwidth();
-        })
-        .y(function (d) {
-          return yScale(d.time);
-        });
-
-      // 定义箭头
-      var defs = svg.append("defs");
-
-      var arrowMarker = defs.append("marker")
-        .attr("id", "arrow")
-        .attr("markerUnits", "strokeWidth")
-        .attr("markerWidth", "12")
-        .attr("markerHeight", "12")
-        .attr("viewBox", "0 0 12 12")
-        .attr("refX", "6")
-        .attr("refY", "6")
-        .attr("orient", "auto");
-
-      var arrow_path = "M 0 0 L 10 5 L 0 10 z";
-
-      arrowMarker.append("path")
-        .attr("d", arrow_path)
-        .attr("fill", "#bbbbbb");
-
-      //绘制边和箭头
-      Edata.list.forEach(d => {
-
-        g.append('path')
-          .attr('class', 'line')
-          .attr('d', line([{
-            name: d.source,
-            time: d.time
-          }, {
-            name: d.target,
-            time: d.time + 1
-          }]))
-          .attr('fill', 'none')
-          .attr('stroke-width', 3)
-         // .attr("marker-end", "url(#arrow)")
-          .style("stroke", "#DCDCDC")
-          .style("stroke-dasharray", 6);
-
-        g.append("circle")
-          .attr("class", `T${d.time}`)
-          .attr("cx", xScale(d.source) + 0.5 * xScale.bandwidth())
-          .attr("cy", yScale(d.time))
-          .attr("r", 5)
-          .style("fill", "black");
-
-        g.append("circle")
-          .attr("class", `T${d.time + 1}`)
-          .attr("cx", xScale(d.target) + 0.5 * xScale.bandwidth())
-          .attr("cy", yScale(d.time + 1))
-          .attr("r", 5)
-          .style("fill", "black");
-      })
-
+      
+      
     },
     generateVis() {
       let that = this;
@@ -134,7 +75,7 @@ export default {
       const innerwidth = width - margin.left - margin.right;
       const innerheight = height - margin.top - margin.bottom;
       // 设置坐标轴
-      const xScale = d3.scaleBand()
+      const yScale = d3.scaleBand()
         .domain(Vdata.list.map(d => d.name))
         .range([0, innerwidth]);
       const yScale = d3.scaleLinear()
@@ -146,7 +87,7 @@ export default {
       const yAxis = d3.axisLeft(yScale);
       g.append('g')
         .call(yAxis);
-      const xAxis = d3.axisBottom(xScale);
+      const xAxis = d3.axisBottom(yScale);
       g.append('g')
         .attr('transform', `translate(${0},${innerheight})`)
         .call(xAxis);
@@ -158,7 +99,7 @@ export default {
           .enter()
           .append("circle")
           .attr("cx", function (d) {
-            return xScale(d.name) + 0.5 * xScale.bandwidth();
+            return yScale(d.name) + 0.5 * yScale.bandwidth();
           })
           .attr("cy", function (d) {
             return yScale(i)
@@ -169,7 +110,7 @@ export default {
       //绘制消息边
       let line = d3.line()
         .x(function (d) {
-          return xScale(d.name) + 0.5 * xScale.bandwidth();
+          return yScale(d.name) + 0.5 * yScale.bandwidth();
         })
         .y(function (d) {
           return yScale(d.time);
